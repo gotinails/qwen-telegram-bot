@@ -103,7 +103,7 @@ def main():
 
     # === Настройка вебхука для Render ===
     port = int(os.getenv("PORT", 8000))
-    webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}.onrender.com/webhook"
+    webhook_url = "https://qwen-telegram-bot-o90m.onrender.com/webhook"
 
     app.run_webhook(
         listen="0.0.0.0",
