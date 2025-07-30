@@ -105,11 +105,14 @@ def main():
     port = int(os.getenv("PORT", 8000))
     webhook_url = "https://qwen-telegram-bot-o90m.onrender.com/webhook"
 
+    print(f"PORT: {port}")
+print(f"WEBHOOK_URL: {webhook_url}")
+print(f"RENDER_EXTERNAL_HOSTNAME: {os.getenv('RENDER_EXTERNAL_HOSTNAME')}")
     app.run_webhook(
         listen="0.0.0.0",
         port=port,
         webhook_url=webhook_url,
-        
+
     )
 
 if __name__ == '__main__':
