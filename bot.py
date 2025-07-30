@@ -82,7 +82,9 @@ def main():
     # === Настройка вебхука ===
     port = int(os.getenv("PORT", 8000))
     webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}.onrender.com/webhook"
-
+    print(f"PORT: {port}")
+    print(f"WEBHOOK_URL: {webhook_url}")
+    print(f"RENDER_EXTERNAL_HOSTNAME: {os.getenv('RENDER_EXTERNAL_HOSTNAME')}")
     app.run_webhook(
         listen="0.0.0.0",
         port=port,
