@@ -1,0 +1,2 @@
+python-telegram-bot==20.9
+dashscope==1.15.2
