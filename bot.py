@@ -7,7 +7,7 @@ from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
 # === Настройки ===
 HF_API_KEY = os.getenv("HF_API_KEY")
-MODEL_NAME = "facebook/blenderbot-1B-11"
+MODEL_NAME = "gpt2"
 # 🔥 ИСПРАВЛЕНО: УБРАНЫ ПРОБЕЛЫ В URL
 API_URL = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
 
