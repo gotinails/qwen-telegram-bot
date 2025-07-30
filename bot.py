@@ -109,7 +109,7 @@ def main():
         listen="0.0.0.0",
         port=port,
         webhook_url=webhook_url,
-        secret_token="my-super-secret-token-12345"
+        
     )
 
 if __name__ == '__main__':
