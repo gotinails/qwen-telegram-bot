@@ -8,7 +8,7 @@ from telegram.ext import Application, MessageHandler, filters, ContextTypes
 # === Настройки ===
 HF_API_KEY = os.getenv("HF_API_KEY")
 MODEL_NAME = "facebook/blenderbot-1B-11"
-# 🔥 ВАЖНО: УБРАЛ ЛИШНИЕ ПРОБЕЛЫ В URL
+# 🔥 ИСПРАВЛЕНО: УБРАНЫ ПРОБЕЛЫ В URL
 API_URL = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
 
 # Заголовки для запроса
@@ -109,7 +109,7 @@ def main():
         listen="0.0.0.0",
         port=port,
         webhook_url=webhook_url,
-        secret_token="my-super-secret-token-12345"  # можно изменить
+        secret_token="my-super-secret-token-12345"
     )
 
 if __name__ == '__main__':
