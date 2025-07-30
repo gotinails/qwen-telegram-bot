@@ -7,7 +7,8 @@ from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
 # === Настройки ===
 HF_API_KEY = os.getenv("HF_API_KEY")
-MODEL_NAME = "Qwen/Qwen2.5-1.5B"  # Лёгкая, но умная модель
+MODEL_NAME = "Qwen/Qwen2.5-1.5B"
+# 🔥 ВАЖНО: УБРАЛ ЛИШНИЕ ПРОБЕЛЫ В URL
 API_URL = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
 
 # Заголовки для запроса
@@ -29,15 +30,36 @@ async def get_hf_response(prompt: str) -> str:
                 "do_sample": True
             }
         }
-        response = requests.post(API_URL, headers=headers, json=payload)
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+
+        logger.info(f"HF Status: {response.status_code}, Response: {response.text[:200]}...")
 
         if response.status_code == 200:
-            return response.json()[0]['generated_text'].strip()
+            try:
+                output = response.json()
+                if isinstance(output, list):
+                    return output[0]['generated_text'].strip()
+                elif isinstance(output, dict):
+                    if 'generated_text' in output:
+                        return output['generated_text'].strip()
+                    elif 'error' in output:
+                        return f"❌ {output['error']}"
+                    else:
+                        return "Неизвестный формат ответа."
+                else:
+                    return "Ошибка: неожиданный формат данных."
+            except json.JSONDecodeError:
+                return "Ошибка: не удалось обработать ответ (возможно, модель загружается)."
+        elif response.status_code == 503:
+            return "⏳ Модель загружается. Подождите 1–2 минуты."
+        elif response.status_code == 429:
+            return "🚫 Слишком много запросов. Попробуйте позже."
+        elif response.status_code == 401:
+            return "🔑 Ошибка авторизации. Проверьте HF_API_KEY."
         else:
-            error = response.json()
-            return f"Ошибка: {response.status_code} — {error.get('error', 'Неизвестная ошибка')}"
+            return f"❌ Ошибка {response.status_code}: {response.text}"
     except Exception as e:
-        return f"Произошла ошибка: {str(e)}"
+        return f"🌐 Ошибка подключения к Hugging Face: {str(e)}"
 
 # Обработчик сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -46,18 +68,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.message.from_user.username or update.message.from_user.first_name
     logger.info(f"Сообщение от @{username} ({chat_id}): {user_message}")
 
-    # Показываем "печатает..."
     await context.bot.send_chat_action(chat_id=chat_id, action='typing')
 
-    # Получаем ответ
-    full_prompt = f"Ты — дружелюбный и умный помощник. Отвечай кратко и по делу.\n\nПользователь: {user_message}\nТы:"
+    full_prompt = (
+        "Ты — дружелюбный и умный помощник. Отвечай кратко и по делу.\n\n"
+        f"Пользователь: {user_message}\nТы:"
+    )
     response = await get_hf_response(full_prompt)
 
-    # Убираем промпт из ответа (если модель его повторила)
     if response.startswith(full_prompt):
         response = response[len(full_prompt):].strip()
 
-    # Отправляем ответ
     await update.message.reply_text(response)
 
 # Обработчик ошибок
@@ -69,6 +90,9 @@ def main():
     if not HF_API_KEY:
         logger.error("❌ Не задан HF_API_KEY")
         return
+    if not os.getenv("TELEGRAM_BOT_TOKEN"):
+        logger.error("❌ Не задан TELEGRAM_BOT_TOKEN")
+        return
 
     logger.info("🤖 Бот запускается...")
 
@@ -77,7 +101,16 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
 
-    app.run_polling()
+    # === Настройка вебхука для Render ===
+    port = int(os.getenv("PORT", 8000))
+    webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}.onrender.com/webhook"
+
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        webhook_url=webhook_url,
+        secret_token="my-super-secret-token-12345"  # можно изменить
+    )
 
 if __name__ == '__main__':
     main()
